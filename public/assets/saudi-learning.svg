@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-labelledby="title desc">
+  <title id="title">Saudi Arabic learning celebration</title>
+  <desc id="desc">Green educational illustration with Arabic letters, a book, and Saudi-inspired geometric decoration</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#006c35"/><stop offset="1" stop-color="#00a651"/></linearGradient>
+    <pattern id="p" width="44" height="44" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0h44v44H0z" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="3"/></pattern>
+  </defs>
+  <rect width="800" height="480" rx="44" fill="url(#g)"/><rect width="800" height="480" rx="44" fill="url(#p)"/>
+  <circle cx="646" cy="106" r="90" fill="#fff" fill-opacity=".11"/>
+  <path d="M150 338c92-40 174-35 250 13V162c-76-48-158-53-250-13z" fill="#fff"/><path d="M650 338c-92-40-174-35-250 13V162c76-48 158-53 250-13z" fill="#f3fff7"/>
+  <path d="M400 162v189" stroke="#006c35" stroke-opacity=".3" stroke-width="5"/>
+  <text x="275" y="270" text-anchor="middle" font-family="serif" font-weight="700" font-size="86" fill="#006c35">ض</text>
+  <text x="525" y="270" text-anchor="middle" font-family="serif" font-weight="700" font-size="86" fill="#006c35">ع</text>
+  <g fill="#fff"><circle cx="112" cy="92" r="8"/><circle cx="142" cy="92" r="5"/><circle cx="678" cy="392" r="7"/><path d="M89 382h112v8H89zM599 82h112v8H599z" opacity=".8"/></g>
+</svg>
