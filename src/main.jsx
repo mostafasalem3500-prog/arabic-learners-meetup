@@ -6,6 +6,21 @@ import {
   SignOut, Star, ArrowLeft,
 } from '@phosphor-icons/react';
 import './styles.css';
+import { questionBank, localizeQuestion } from '../question-bank.js';
+
+/* ─────────────── HELPERS ─────────────── */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getMeaning(item, lang) {
+  return lang === 'ar' ? item.clues.en : (item.clues[lang] || item.clues.en);
+}
 
 /* ─────────────── TRANSLATIONS ─────────────── */
 const copy = {
@@ -20,6 +35,13 @@ const copy = {
     good:'Good effort! جيد 👍', keep:'Keep learning! استمر 📚',
     words:'Words', phrases:'Phrases', numbers:'Numbers', home:'Home',
     tier_a:'Master', tier_b:'Advanced', tier_c:'Intermediate', tier_d:'Beginner',
+    games:'Practice Games',
+    match_title:'Word Match', match_desc:'Connect Arabic words to their meanings',
+    match_hint:'Tap a word, then tap its meaning', match_win:'All matched! 🎉',
+    flash_title:'Flash Cards', flash_desc:'Flip cards to reveal Arabic words',
+    flash_tap:'Tap to flip', flash_got:'Got it!', flash_done:'All done! 🌟',
+    speed_title:'Speed Quiz', speed_desc:'30 seconds — how many can you get right?',
+    speed_go:'Start!', speed_done:"Time's up!", speed_correct:'Correct',
   },
   tr: {
     welcome:'Hoş geldiniz!', intro:'Burada olmanıza sevindik. Haydi birlikte Arapça öğrenelim.',
@@ -32,6 +54,13 @@ const copy = {
     good:'İyi çaba! جيد 👍', keep:'Öğrenmeye devam! استمر 📚',
     words:'Kelimeler', phrases:'İfadeler', numbers:'Sayılar', home:'Ana sayfa',
     tier_a:'Usta', tier_b:'İleri', tier_c:'Orta', tier_d:'Başlangıç',
+    games:'Alıştırma Oyunları',
+    match_title:'Kelime Eşleştirme', match_desc:'Arapça kelimeleri anlamlarıyla eşleştir',
+    match_hint:'Bir kelimeye, sonra anlamına dokun', match_win:'Hepsi eşleşti! 🎉',
+    flash_title:'Öğrenme Kartları', flash_desc:'Arapça kelimeleri keşfetmek için çevirin',
+    flash_tap:'Çevirmek için dokun', flash_got:'Anladım!', flash_done:'Hepsi tamam! 🌟',
+    speed_title:'Hız Testi', speed_desc:'30 saniye — kaç tane yapabilirsin?',
+    speed_go:'Başla!', speed_done:'Süre doldu!', speed_correct:'Doğru',
   },
   uz: {
     welcome:"Xush kelibsiz!", intro:"Sizni koʻrganimizdan xursandmiz. Keling, arab tilini birgalikda oʻrganamiz.",
@@ -44,6 +73,13 @@ const copy = {
     good:"Yaxshi harakat! جيد 👍", keep:"Oʻrganishni davom eting! استمر 📚",
     words:"Soʻzlar", phrases:"Iboralar", numbers:"Raqamlar", home:"Bosh sahifa",
     tier_a:"Usta", tier_b:"Ilgʻor", tier_c:"Oʻrta", tier_d:"Boshlangʻich",
+    games:"Mashq o'yinlari",
+    match_title:"So'z moslashtirish", match_desc:"Arab so'zlarini ma'nolari bilan moslashtiring",
+    match_hint:"So'zni, keyin ma'nosini bosing", match_win:"Hammasi moslashdi! 🎉",
+    flash_title:"Kartochkalar", flash_desc:"Arab so'zlarini o'rganish uchun ag'daring",
+    flash_tap:"Ag'darish uchun bosing", flash_got:"O'rgandim!", flash_done:"Hammasi tugadi! 🌟",
+    speed_title:"Tezlik testi", speed_desc:"30 soniya — nechta to'g'ri javob bera olasiz?",
+    speed_go:"Boshlash!", speed_done:"Vaqt tugadi!", speed_correct:"To'g'ri",
   },
   ar: {
     welcome:'مرحبًا!', intro:'سعداء بحضورك. لنتعلم العربية معًا، كلمةً ومحادثةً في كل مرة.',
@@ -56,6 +92,13 @@ const copy = {
     good:'جيد! 👍', keep:'واصل التعلم! 📚',
     words:'المفردات', phrases:'العبارات', numbers:'الأرقام', home:'الرئيسية',
     tier_a:'محترف', tier_b:'متقدم', tier_c:'متوسط', tier_d:'مبتدئ',
+    games:'ألعاب تدريبية',
+    match_title:'مطابقة الكلمات', match_desc:'صِل الكلمات العربية بمعانيها',
+    match_hint:'اضغط كلمة ثم اضغط معناها', match_win:'أحسنت! طابقت الكل 🎉',
+    flash_title:'بطاقات تعليمية', flash_desc:'اقلب البطاقات لتعلم الكلمات العربية',
+    flash_tap:'اضغط للقلب', flash_got:'حفظت!', flash_done:'أنهيت الكل! 🌟',
+    speed_title:'تحدي السرعة', speed_desc:'30 ثانية — كم سؤالاً تستطيع الإجابة؟',
+    speed_go:'ابدأ!', speed_done:'انتهى الوقت!', speed_correct:'صحيح',
   },
 };
 
@@ -97,7 +140,6 @@ function NationalDayMark() {
   );
 }
 
-/* Floating Arabic letters background */
 function LetterBg() {
   const letters = ['م','ر','ح','ب','ا','ع'];
   return (
@@ -109,7 +151,6 @@ function LetterBg() {
   );
 }
 
-/* Question visual — animated emoji bubble */
 function QuestionVisual({ emoji, type }) {
   const typeLabel = { word: 'Vocabulary', phrase: 'Phrase', number: 'Number' };
   return (
@@ -120,7 +161,6 @@ function QuestionVisual({ emoji, type }) {
   );
 }
 
-/* Animated progress bar with dots */
 function ProgressBar({ current, total }) {
   const pct = (current / total) * 100;
   return (
@@ -138,7 +178,6 @@ function ProgressBar({ current, total }) {
   );
 }
 
-/* SVG score ring */
 function ScoreRing({ score, total }) {
   const r    = 72;
   const circ = 2 * Math.PI * r;
@@ -178,7 +217,6 @@ function ScoreRing({ score, total }) {
   );
 }
 
-/* Animated stars */
 function Stars({ count }) {
   return (
     <div className="stars" aria-label={`${count} stars`}>
@@ -193,7 +231,6 @@ function Stars({ count }) {
   );
 }
 
-/* Confetti particles */
 function Confetti() {
   const colors = ['#006c35','#00a651','#58c786','#ffd700','#fff','#c8f0d8'];
   return (
@@ -217,8 +254,350 @@ function Confetti() {
   );
 }
 
+/* ─────────────── GAME CARD (homepage) ─────────────── */
+function GameCard({ emoji, title, desc, onClick }) {
+  return (
+    <button className="game-card" onClick={onClick}>
+      <div className="game-card-icon">{emoji}</div>
+      <div className="game-card-text">
+        <h3>{title}</h3>
+        <p>{desc}</p>
+      </div>
+      <ArrowRight size={22} className="game-card-arrow" />
+    </button>
+  );
+}
+
+/* ─────────────── MATCH GAME ─────────────── */
+function MatchGame({ lang, onBack }) {
+  const t   = copy[lang];
+  const rtl = isRtl(lang);
+
+  const [gameItems] = useState(() => shuffle([...questionBank]).slice(0, 6));
+  const [rightOrder] = useState(() => shuffle([0,1,2,3,4,5]));
+  const [leftSel,  setLeftSel]  = useState(null);
+  const [rightSel, setRightSel] = useState(null);
+  const [matched,  setMatched]  = useState(new Set());
+  const [wrongPair,setWrongPair]= useState(null);
+
+  function checkMatch(leftIdx, rightPos) {
+    if (rightOrder[rightPos] === leftIdx) {
+      setMatched(prev => { const s = new Set(prev); s.add(leftIdx); return s; });
+      setLeftSel(null); setRightSel(null);
+    } else {
+      setWrongPair({ left: leftIdx, right: rightPos });
+      setTimeout(() => { setWrongPair(null); setLeftSel(null); setRightSel(null); }, 700);
+    }
+  }
+
+  function selectLeft(i) {
+    if (matched.has(i) || wrongPair) return;
+    const nxt = leftSel === i ? null : i;
+    setLeftSel(nxt);
+    if (nxt !== null && rightSel !== null) checkMatch(nxt, rightSel);
+  }
+
+  function selectRight(pos) {
+    if (matched.has(rightOrder[pos]) || wrongPair) return;
+    const nxt = rightSel === pos ? null : pos;
+    setRightSel(nxt);
+    if (leftSel !== null && nxt !== null) checkMatch(leftSel, nxt);
+  }
+
+  const won = matched.size === 6;
+
+  return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button onClick={onBack}>
+          {rtl ? <ArrowRight size={18}/> : <ArrowLeft size={18}/>} {t.home}
+        </button>
+        <span className="game-page-title">🎯 {t.match_title}</span>
+        <span className="match-score-badge">{matched.size}/6</span>
+      </nav>
+
+      {won ? (
+        <div className="game-win">
+          <Confetti />
+          <div className="win-emoji">🎉</div>
+          <h2>{t.match_win}</h2>
+          <Stars count={5} />
+          <div style={{ display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:280, margin:'24px auto 0' }}>
+            <button className="primary" onClick={() => window.location.reload()}>{t.again}</button>
+            <button className="secondary" onClick={onBack}>{t.home}</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="game-hint">{t.match_hint}</p>
+          <div className="match-grid">
+            <div className="match-col">
+              {gameItems.map((item, i) => (
+                <button
+                  key={i}
+                  className={`match-item arabic-item${matched.has(i) ? ' matched' : leftSel === i ? ' selected' : wrongPair?.left === i ? ' wrong' : ''}`}
+                  onClick={() => selectLeft(i)}
+                  disabled={matched.has(i)}
+                >
+                  {item.answer}
+                </button>
+              ))}
+            </div>
+            <div className="match-col">
+              {rightOrder.map((realIdx, pos) => (
+                <button
+                  key={pos}
+                  className={`match-item${matched.has(realIdx) ? ' matched' : rightSel === pos ? ' selected' : wrongPair?.right === pos ? ' wrong' : ''}`}
+                  onClick={() => selectRight(pos)}
+                  disabled={matched.has(realIdx)}
+                >
+                  <span className="match-emoji">{gameItems[realIdx].emoji}</span>
+                  <span>{getMeaning(gameItems[realIdx], lang)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </main>
+  );
+}
+
+/* ─────────────── FLASH CARDS ─────────────── */
+function FlashCards({ lang, onBack }) {
+  const t   = copy[lang];
+  const rtl = isRtl(lang);
+
+  const [cards] = useState(() => shuffle([...questionBank]).slice(0, 20));
+  const [idx,     setIdx]     = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [learned, setLearned] = useState(new Set());
+  const [done,    setDone]    = useState(false);
+
+  const card = cards[idx];
+
+  function flip() { setFlipped(f => !f); }
+
+  function gotIt() {
+    const nxt = new Set(learned); nxt.add(idx);
+    setLearned(nxt);
+    if (nxt.size === cards.length) { setDone(true); return; }
+    goNext();
+  }
+
+  function goNext() {
+    setFlipped(false);
+    if (idx < cards.length - 1) setTimeout(() => setIdx(i => i + 1), 150);
+  }
+
+  function goPrev() {
+    setFlipped(false);
+    if (idx > 0) setTimeout(() => setIdx(i => i - 1), 150);
+  }
+
+  if (done) return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button onClick={onBack}>{rtl ? <ArrowRight size={18}/> : <ArrowLeft size={18}/>} {t.home}</button>
+        <span className="game-page-title">🃏 {t.flash_title}</span>
+        <span />
+      </nav>
+      <div className="game-win">
+        <Confetti />
+        <div className="win-emoji">🌟</div>
+        <h2>{t.flash_done}</h2>
+        <Stars count={5} />
+        <div style={{ display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:280, margin:'24px auto 0' }}>
+          <button className="primary" onClick={() => window.location.reload()}>{t.again}</button>
+          <button className="secondary" onClick={onBack}>{t.home}</button>
+        </div>
+      </div>
+    </main>
+  );
+
+  return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button onClick={onBack}>{rtl ? <ArrowRight size={18}/> : <ArrowLeft size={18}/>} {t.home}</button>
+        <span className="game-page-title">🃏 {t.flash_title}</span>
+        <span className="flash-learned-badge">{learned.size}/{cards.length}</span>
+      </nav>
+
+      <div className="flash-wrap">
+        <div className="flash-card-outer" onClick={flip} role="button" aria-label={t.flash_tap}>
+          <div className={`flash-card${flipped ? ' flipped' : ''}`}>
+            <div className="flash-front">
+              <div className="flash-emoji-big">{card.emoji}</div>
+              <div className="flash-arabic">{card.answer}</div>
+              <div className="flash-tap-hint">{t.flash_tap} ↻</div>
+            </div>
+            <div className="flash-back">
+              <div className="flash-emoji-big">{card.emoji}</div>
+              <div className="flash-meaning">{getMeaning(card, lang)}</div>
+              <div className="flash-arabic-small">{card.answer}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flash-nav">
+          <button className="flash-nav-btn" onClick={goPrev} disabled={idx === 0}>
+            {rtl ? '→' : '←'}
+          </button>
+          <span className="flash-counter">{idx + 1} / {cards.length}</span>
+          <button className="flash-nav-btn" onClick={goNext} disabled={idx === cards.length - 1}>
+            {rtl ? '←' : '→'}
+          </button>
+        </div>
+
+        <button
+          className={`flash-got-btn${flipped ? '' : ' dim'}`}
+          onClick={gotIt}
+          disabled={!flipped || learned.has(idx)}
+        >
+          {learned.has(idx) ? '✓ ' + t.flash_got : t.flash_got}
+        </button>
+      </div>
+    </main>
+  );
+}
+
+/* ─────────────── SPEED CHALLENGE ─────────────── */
+function SpeedChallenge({ lang, onBack }) {
+  const t   = copy[lang];
+  const rtl = isRtl(lang);
+
+  const [questions] = useState(() =>
+    shuffle([...questionBank]).slice(0, 40).map(item => {
+      const loc = localizeQuestion(item, lang);
+      const correct = loc.options[0];
+      const opts = shuffle([...loc.options]);
+      return { emoji: loc.emoji, word: loc.word, options: opts, correct };
+    })
+  );
+
+  const [started,  setStarted]  = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [qIdx,     setQIdx]     = useState(0);
+  const [score,    setScore]    = useState(0);
+  const [attempted,setAttempted]= useState(0);
+  const [feedback, setFeedback] = useState(null);
+  const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    if (!started || finished) return;
+    if (timeLeft <= 0) { setFinished(true); return; }
+    const timer = setInterval(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearInterval(timer);
+  }, [started, finished, timeLeft]);
+
+  function answer(opt) {
+    if (feedback || finished) return;
+    const correct = opt === questions[qIdx].correct;
+    setFeedback(correct ? 'ok' : 'err');
+    if (correct) setScore(s => s + 1);
+    setAttempted(a => a + 1);
+    setTimeout(() => {
+      setFeedback(null);
+      if (qIdx < questions.length - 1) setQIdx(i => i + 1);
+      else setFinished(true);
+    }, 600);
+  }
+
+  const stars = score >= 15 ? 5 : score >= 10 ? 4 : score >= 6 ? 3 : score >= 3 ? 2 : 1;
+  const timerPct = (timeLeft / 30) * 100;
+  const timerColor = timeLeft > 15 ? 'var(--green)' : timeLeft > 7 ? '#f0a500' : '#e53e3e';
+
+  if (finished) return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button onClick={onBack}>{rtl ? <ArrowRight size={18}/> : <ArrowLeft size={18}/>} {t.home}</button>
+        <span className="game-page-title">⚡ {t.speed_title}</span>
+        <span />
+      </nav>
+      <div className="game-win">
+        {score >= 10 && <Confetti />}
+        <div className="win-emoji">{score >= 10 ? '🏆' : score >= 5 ? '🌟' : '📚'}</div>
+        <h2>{t.speed_done}</h2>
+        <div className="speed-final-score">
+          <span className="speed-big-num">{score}</span>
+          <span className="speed-denom">/{attempted}</span>
+        </div>
+        <Stars count={stars} />
+        <div style={{ display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:280, margin:'20px auto 0' }}>
+          <button className="primary" onClick={() => window.location.reload()}>{t.again}</button>
+          <button className="secondary" onClick={onBack}>{t.home}</button>
+        </div>
+      </div>
+    </main>
+  );
+
+  if (!started) return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button onClick={onBack}>{rtl ? <ArrowRight size={18}/> : <ArrowLeft size={18}/>} {t.home}</button>
+        <span className="game-page-title">⚡ {t.speed_title}</span>
+        <span />
+      </nav>
+      <div className="speed-start-screen">
+        <div className="speed-start-icon">⚡</div>
+        <h2>{t.speed_title}</h2>
+        <p>{t.speed_desc}</p>
+        <div className="speed-rules">
+          <span>🕐 30s</span>
+          <span>📝 {questions.length}</span>
+          <span>⭐ 5★</span>
+        </div>
+        <button className="primary speed-go-btn" onClick={() => setStarted(true)}>
+          {t.speed_go} <ArrowRight size={20}/>
+        </button>
+      </div>
+    </main>
+  );
+
+  const q = questions[qIdx];
+
+  return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button onClick={onBack}>{rtl ? <ArrowRight size={18}/> : <ArrowLeft size={18}/>} {t.home}</button>
+        <span className="game-page-title">⚡ {t.speed_title}</span>
+        <span className="speed-score-badge">✓ {score}</span>
+      </nav>
+
+      <div className="speed-timer-row">
+        <span className="speed-time-num" style={{ color: timerColor }}>{timeLeft}s</span>
+        <div className="speed-timer-track">
+          <div className="speed-timer-fill" style={{ width: `${timerPct}%`, background: timerColor }} />
+        </div>
+      </div>
+
+      <div className="speed-q-area">
+        <div className="speed-emoji-big">{q.emoji}</div>
+        <div className="speed-clue-word">{q.word}</div>
+
+        <div className="speed-options">
+          {q.options.map((opt, i) => (
+            <button
+              key={`${qIdx}-${i}`}
+              className={`speed-option ${feedback && opt === q.correct ? 'ok' : feedback === 'err' && q.options[i] !== q.correct ? 'err-maybe' : ''}`}
+              onClick={() => answer(opt)}
+              disabled={!!feedback}
+              style={{
+                background: feedback && opt === q.correct ? '#eaf7f0' : '',
+                borderColor: feedback && opt === q.correct ? 'var(--green)' : '',
+              }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
 /* ─────────────── HOME PAGE ─────────────── */
-function HomePage({ lang, setLang, onJoin }) {
+function HomePage({ lang, setLang, onJoin, onGame }) {
   const t = copy[lang];
   const [name, setName] = useState('');
 
@@ -267,6 +646,33 @@ function HomePage({ lang, setLang, onJoin }) {
           {t.join} <ArrowRight size={20} />
         </button>
         <button className="secondary"><GridFour size={18} /> {t.code}</button>
+      </section>
+
+      {/* ── Games Section ── */}
+      <section className="games-section">
+        <div className="section-label games-label">
+          <span>🎮</span> {t.games}
+        </div>
+        <div className="game-cards-grid">
+          <GameCard
+            emoji="🎯"
+            title={t.match_title}
+            desc={t.match_desc}
+            onClick={() => onGame('match')}
+          />
+          <GameCard
+            emoji="🃏"
+            title={t.flash_title}
+            desc={t.flash_desc}
+            onClick={() => onGame('flashcard')}
+          />
+          <GameCard
+            emoji="⚡"
+            title={t.speed_title}
+            desc={t.speed_desc}
+            onClick={() => onGame('speed')}
+          />
+        </div>
       </section>
 
       <section className="sample">
@@ -457,7 +863,6 @@ function Result({ lang, result, onAgain }) {
         <p className="perf-msg">{msg}</p>
       </div>
 
-      {/* Mini infographic */}
       <div className="infographic">
         <div className="info-bar">
           <div className="info-bar-label">Score</div>
@@ -619,8 +1024,18 @@ function App() {
   if (stage === 'result') return (
     <Result lang={lang} result={result} onAgain={() => setStage('home')} />
   );
-  return <HomePage lang={lang} setLang={l => { setLang(l); }} onJoin={n => { setName(n); setStage('quiz'); }} />;
-}
+  if (stage === 'match')     return <MatchGame      lang={lang} onBack={() => setStage('home')} />;
+  if (stage === 'flashcard') return <FlashCards     lang={lang} onBack={() => setStage('home')} />;
+  if (stage === 'speed')     return <SpeedChallenge lang={lang} onBack={() => setStage('home')} />;
 
+  return (
+    <HomePage
+      lang={lang}
+      setLang={l => setLang(l)}
+      onJoin={n => { setName(n); setStage('quiz'); }}
+      onGame={s => setStage(s)}
+    />
+  );
+}
 
 createRoot(document.getElementById('root')).render(<App />);
