@@ -1,7 +1,23 @@
 import express from'express';import helmet from'helmet';import compression from'compression';import rateLimit from'express-rate-limit';import pg from'pg';import{SignJWT,jwtVerify}from'jose';import{z}from'zod';import path from'node:path';import{fileURLToPath}from'node:url';
 const app=express(),port=Number(process.env.PORT||3000),secret=new TextEncoder().encode(process.env.JWT_SECRET||'local-development-secret-change-me');app.use(helmet({contentSecurityPolicy:false}));app.use(compression());app.use(express.json({limit:'1mb'}));app.use('/api',rateLimit({windowMs:60000,limit:180}));
 const pool=process.env.DATABASE_URL?new pg.Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.NODE_ENV==='production'?{rejectUnauthorized:false}:false}):null;
-const questions=[{id:1,prompt:'What is this called in Arabic?',word:'قَهْوَة',image:'/assets/coffee.png',options:['كِتَاب','قَهْوَة','بَاب'],answer:1},{id:2,prompt:'Choose the Arabic word for “book”.',word:'Book',image:'/assets/book.svg',options:['مِفْتَاح','كُرْسِيّ','كِتَاب'],answer:2},{id:3,prompt:'Which greeting means “Hello”?',word:'Hello',image:'/assets/speech.svg',options:['مَرْحَبًا','شُكْرًا','مَعَ السَّلَامَة'],answer:0},{id:4,prompt:'Choose the Arabic word for “apple”.',word:'Apple',image:'/assets/apple.svg',options:['تُفَّاحَة','مَاء','سَيَّارَة'],answer:0},{id:5,prompt:'What number is this?',word:'٣',image:'/assets/three.svg',options:['وَاحِد','ثَلَاثَة','خَمْسَة'],answer:1}];let memory=[];
+const questions=[
+{id:1,prompt:'What is this called in Arabic?',word:'Coffee',image:'/assets/coffee.png',options:['كِتَاب','قَهْوَة','بَاب'],answer:1},
+{id:2,prompt:'Choose the Arabic word for “book”.',word:'Book',image:'/assets/book.svg',options:['مِفْتَاح','كُرْسِيّ','كِتَاب'],answer:2},
+{id:3,prompt:'Which greeting means “Hello”?',word:'Hello',image:'/assets/speech.svg',options:['مَرْحَبًا','شُكْرًا','مَعَ السَّلَامَة'],answer:0},
+{id:4,prompt:'Choose the Arabic word for “apple”.',word:'Apple',image:'/assets/apple.svg',options:['تُفَّاحَة','مَاء','سَيَّارَة'],answer:0},
+{id:5,prompt:'What number is this?',word:'٣',image:'/assets/three.svg',options:['وَاحِد','ثَلَاثَة','خَمْسَة'],answer:1},
+{id:6,prompt:'Choose the Arabic word for “water”.',word:'Water',image:'/assets/saudi-learning.svg',options:['مَاء','خُبْز','قَلَم'],answer:0},
+{id:7,prompt:'What does “بَاب” mean?',word:'بَاب',image:'/assets/saudi-learning.svg',options:['Window','Door','Table'],answer:1},
+{id:8,prompt:'Choose the Arabic word for “chair”.',word:'Chair',image:'/assets/saudi-learning.svg',options:['مَدْرَسَة','كُرْسِيّ','شَارِع'],answer:1},
+{id:9,prompt:'Which word means “key”?',word:'Key',image:'/assets/saudi-learning.svg',options:['مِفْتَاح','هَاتِف','حَقِيبَة'],answer:0},
+{id:10,prompt:'Choose the Arabic word for “car”.',word:'Car',image:'/assets/saudi-learning.svg',options:['طَائِرَة','سَيَّارَة','حَافِلَة'],answer:1},
+{id:11,prompt:'Which expression means “Thank you”?',word:'Thank you',image:'/assets/speech.svg',options:['مِنْ فَضْلِكَ','شُكْرًا','عَفْوًا'],answer:1},
+{id:12,prompt:'Which expression means “Goodbye”?',word:'Goodbye',image:'/assets/speech.svg',options:['صَبَاحُ الخَيْر','مَعَ السَّلَامَة','أَهْلًا وَسَهْلًا'],answer:1},
+{id:13,prompt:'Choose the Arabic number “one”.',word:'1',image:'/assets/saudi-learning.svg',options:['وَاحِد','اِثْنَان','أَرْبَعَة'],answer:0},
+{id:14,prompt:'Choose the Arabic number “five”.',word:'5',image:'/assets/saudi-learning.svg',options:['سِتَّة','ثَلَاثَة','خَمْسَة'],answer:2},
+{id:15,prompt:'Complete the Saudi greeting.',word:'السَّلَامُ عَلَيْكُمْ',image:'/assets/saudi-learning.svg',options:['وَعَلَيْكُمُ السَّلَام','إِلَى اللِّقَاء','شُكْرًا جَزِيلًا'],answer:0}
+];let memory=[];
 async function init(){if(pool)await pool.query('CREATE TABLE IF NOT EXISTS attempts(id BIGSERIAL PRIMARY KEY,name TEXT NOT NULL,language TEXT NOT NULL,score INT NOT NULL,total INT NOT NULL,answers JSONB NOT NULL,created_at TIMESTAMPTZ DEFAULT NOW())')}
 const auth=async(req,res,next)=>{try{const h=req.headers.authorization;if(!h?.startsWith('Bearer '))throw 0;await jwtVerify(h.slice(7),secret);next()}catch{res.status(401).json({error:'Unauthorized'})}};
 app.get('/api/health',async(_q,r)=>{try{if(pool)await pool.query('SELECT 1');r.json({ok:true,database:!!pool})}catch{r.status(503).json({ok:false})}});app.get('/api/quiz',(_q,r)=>r.json({title:'Level 1 Challenge',questions:questions.map(({answer,...q})=>q)}));
