@@ -8,6 +8,30 @@ import {
 import './styles.css';
 import { questionBank, localizeQuestion } from '../question-bank.js';
 
+/* ─────────────── SENTENCE BANK ─────────────── */
+const sentenceBank = [
+  { words: ['مَرْحَبًا','كَيْفَ','حَالُكَ؟'],                    en:'Hello, how are you?',              tr:'Merhaba, nasılsın?',                         uz:"Salom, qalaysiz?" },
+  { words: ['أَنَا','بِخَيْر','شُكْرًا'],                       en:'I am fine, thank you.',             tr:'İyiyim, teşekkür ederim.',                   uz:"Yaxshiman, rahmat." },
+  { words: ['مَا','اسْمُكَ؟'],                                   en:'What is your name?',                tr:'Adın ne?',                                   uz:"Ismingiz nima?" },
+  { words: ['أَنَا','أَتَعَلَّمُ','الْعَرَبِيَّةَ'],              en:'I am learning Arabic.',             tr:'Arapça öğreniyorum.',                        uz:"Men arab tilini o'rganaman." },
+  { words: ['هَذَا','كِتَابٌ','جَمِيلٌ'],                        en:'This is a beautiful book.',         tr:'Bu güzel bir kitap.',                         uz:"Bu chiroyli kitob." },
+  { words: ['الطَّعَامُ','لَذِيذٌ','جِدًّا'],                    en:'The food is very delicious.',       tr:'Yemek çok lezzetli.',                         uz:"Taom juda mazali." },
+  { words: ['أُرِيدُ','كَأْسَ','مَاءٍ'],                        en:'I want a glass of water.',          tr:'Bir bardak su istiyorum.',                    uz:"Men bir stakan suv xohlayman." },
+  { words: ['أُحِبُّ','اللُّغَةَ','الْعَرَبِيَّةَ'],             en:'I love the Arabic language.',      tr:'Arapça dilini seviyorum.',                    uz:"Men arab tilini yaxshi ko'raman." },
+  { words: ['الشَّمْسُ','سَاطِعَةٌ','الْيَوْمَ'],                en:'The sun is bright today.',          tr:'Güneş bugün parlıyor.',                       uz:"Bugun quyosh yorqin." },
+  { words: ['هَلْ','تَتَكَلَّمُ','الْعَرَبِيَّةَ؟'],             en:'Do you speak Arabic?',              tr:'Arapça konuşuyor musun?',                     uz:"Siz arabcha gaplashasizmi?" },
+  { words: ['صَبَاحُ','الْخَيْرِ','يَا','صَدِيقِي'],             en:'Good morning, my friend!',          tr:'Günaydın, arkadaşım!',                        uz:"Xayrli tong, do'stim!" },
+  { words: ['مَعَ','السَّلَامَةِ','إِلَى','اللِّقَاءِ'],         en:'Goodbye, see you later.',           tr:'Güle güle, görüşürüz.',                       uz:"Xayr, ko'rishguncha." },
+  { words: ['أَيْنَ','الْمَطْعَمُ','مِنْ','هُنَا؟'],             en:'Where is the restaurant from here?',tr:'Restoran buradan nerede?',                    uz:"Restoran bu yerdan qayerda?" },
+  { words: ['أَنَا','سَعِيدٌ','بِلِقَائِكَ'],                   en:'I am glad to meet you.',            tr:'Seninle tanıştığım için mutluyum.',           uz:"Siz bilan tanishganimdan xursandman." },
+  { words: ['اللُّغَةُ','الْعَرَبِيَّةُ','جَمِيلَةٌ'],           en:'The Arabic language is beautiful.', tr:'Arapça dili güzel.',                          uz:"Arab tili chiroyli." },
+  { words: ['كَمْ','السَّاعَةُ','الْآنَ؟'],                     en:'What time is it now?',              tr:'Şu an saat kaç?',                             uz:"Hozir soat nechchi?" },
+  { words: ['أَنَا','أَسْكُنُ','فِي','الرِّيَاضِ'],              en:'I live in Riyadh.',                 tr:'Riyad\'da yaşıyorum.',                        uz:"Men Riyadda yashayman." },
+  { words: ['هَلْ','تُحِبُّ','الْقَهْوَةَ؟'],                   en:'Do you like coffee?',               tr:'Kahveyi sever misin?',                        uz:"Siz qahvani yaxshi ko'rasizmi?" },
+  { words: ['الْيَوْمُ','الْوَطَنِيُّ','السَّعُودِيُّ'],         en:'Saudi National Day.',               tr:'Suudi Ulusal Günü.',                          uz:"Saudiya Milliy kuni." },
+  { words: ['نَعَمْ','أَنَا','أَفْهَمُ'],                        en:'Yes, I understand.',                tr:'Evet, anlıyorum.',                            uz:"Ha, men tushunaman." },
+];
+
 /* ─────────────── HELPERS ─────────────── */
 function shuffle(arr) {
   const a = [...arr];
@@ -57,6 +81,11 @@ const copy = {
     speed_go:'Start!', speed_done:"Time's up!", speed_correct:'Correct',
     cat_word:'Word', cat_phrase:'Phrase', cat_number:'Number',
     match_new_round:'New Round', match_round:'Round',
+    wo_title:'Sentence Builder', wo_desc:'Arrange words to form correct Arabic sentences',
+    wo_hint:'Tap words in the correct order', wo_check:'Check', wo_undo:'Undo',
+    wo_correct:'Perfect! ✅', wo_wrong:'Not quite — try again! ❌', wo_next:'Next Sentence',
+    wo_done:'Challenge complete! 🏆', wo_new_round:'New Round',
+    wo_progress:'Sentence',
   },
   tr: {
     welcome:'Hoş geldiniz!', intro:'Burada olmanıza sevindik. Haydi birlikte Arapça öğrenelim.',
@@ -78,6 +107,11 @@ const copy = {
     speed_go:'Başla!', speed_done:'Süre doldu!', speed_correct:'Doğru',
     cat_word:'Kelime', cat_phrase:'İfade', cat_number:'Sayı',
     match_new_round:'Yeni Tur', match_round:'Tur',
+    wo_title:'Cümle Kurma', wo_desc:'Doğru Arapça cümleler oluşturmak için kelimeleri sırala',
+    wo_hint:'Kelimelere doğru sırada dokun', wo_check:'Kontrol Et', wo_undo:'Geri Al',
+    wo_correct:'Mükemmel! ✅', wo_wrong:'Tam değil — tekrar dene! ❌', wo_next:'Sonraki Cümle',
+    wo_done:'Meydan okuma tamamlandı! 🏆', wo_new_round:'Yeni Tur',
+    wo_progress:'Cümle',
   },
   uz: {
     welcome:"Xush kelibsiz!", intro:"Sizni koʻrganimizdan xursandmiz. Keling, arab tilini birgalikda oʻrganamiz.",
@@ -99,6 +133,11 @@ const copy = {
     speed_go:"Boshlash!", speed_done:"Vaqt tugadi!", speed_correct:"To'g'ri",
     cat_word:"So'z", cat_phrase:"Ibora", cat_number:"Raqam",
     match_new_round:"Yangi tur", match_round:"Tur",
+    wo_title:"Jumla quruvchi", wo_desc:"To'g'ri arab jumlalarini tuzish uchun so'zlarni tartiblang",
+    wo_hint:"So'zlarga to'g'ri tartibda bosing", wo_check:"Tekshirish", wo_undo:"Bekor qilish",
+    wo_correct:"Ajoyib! ✅", wo_wrong:"To'g'ri emas — qayta urinib ko'ring! ❌", wo_next:"Keyingi jumla",
+    wo_done:"Musobaqa tugadi! 🏆", wo_new_round:"Yangi tur",
+    wo_progress:"Jumla",
   },
   ar: {
     welcome:'مرحبًا!', intro:'سعداء بحضورك. لنتعلم العربية معًا، كلمةً ومحادثةً في كل مرة.',
@@ -120,6 +159,11 @@ const copy = {
     speed_go:'ابدأ!', speed_done:'انتهى الوقت!', speed_correct:'صحيح',
     cat_word:'مفردة', cat_phrase:'عبارة', cat_number:'رقم',
     match_new_round:'جولة جديدة', match_round:'الجولة',
+    wo_title:'منشئ الجمل', wo_desc:'رتّب الكلمات لتكوين جمل عربية صحيحة',
+    wo_hint:'اضغط الكلمات بالترتيب الصحيح', wo_check:'تحقق', wo_undo:'تراجع',
+    wo_correct:'ممتاز! ✅', wo_wrong:'ليس تمامًا — حاول مرة أخرى! ❌', wo_next:'الجملة التالية',
+    wo_done:'اكتملت المسابقة! 🏆', wo_new_round:'جولة جديدة',
+    wo_progress:'الجملة',
   },
 };
 
@@ -628,6 +672,106 @@ function SpeedChallenge({ lang, onBack, onReplay }) {
   );
 }
 
+/* ─────────────── WORD ORDER GAME ─────────────── */
+function WordOrder({ lang, onBack }) {
+  const t   = copy[lang];
+  const rtl = isRtl(lang);
+  const [round, setRound] = useState(1);
+  const sentences = useMemo(() => shuffle([...sentenceBank]).slice(0, 8), [round]);
+  const [idx,      setIdx]      = useState(0);
+  const [tiles,    setTiles]    = useState([]);
+  const [answer,   setAnswer]   = useState([]);
+  const [feedback, setFeedback] = useState(null);
+  const [score,    setScore]    = useState(0);
+  const [done,     setDone]     = useState(false);
+
+  useEffect(() => {
+    if (idx >= sentences.length) return;
+    setTiles(shuffle(sentences[idx].words.map((w, i) => ({ w, id: i }))));
+    setAnswer([]);
+    setFeedback(null);
+  }, [idx, sentences]);
+
+  const sentence = sentences[idx];
+  const meaning  = lang === 'ar' ? sentence.en : sentence[lang] ?? sentence.en;
+
+  function tapTile(tile)   { if (feedback) return; setTiles(ts => ts.filter(t => t.id !== tile.id)); setAnswer(a => [...a, tile]); }
+  function tapAnswer(tile) { if (feedback) return; setAnswer(a => a.filter(t => t.id !== tile.id)); setTiles(ts => [...ts, tile]); }
+  function undo()          { if (feedback || answer.length === 0) return; const last = answer[answer.length - 1]; setAnswer(a => a.slice(0, -1)); setTiles(ts => [...ts, last]); }
+  function check() {
+    if (answer.length !== sentence.words.length) return;
+    const correct = answer.map(t => t.w).join(' ') === sentence.words.join(' ');
+    setFeedback(correct ? 'ok' : 'err');
+    if (correct) setScore(s => s + 1);
+  }
+  function next() { if (idx < sentences.length - 1) { setIdx(i => i + 1); } else { setDone(true); } }
+
+  if (done) return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button className="game-nav-back" onClick={onBack}>←</button>
+        <span className="game-page-title">🔤 {t.wo_title}</span>
+        <span />
+      </nav>
+      <div className="game-win">
+        <Confetti />
+        <div className="win-emoji">🏆</div>
+        <h2>{t.wo_done}</h2>
+        <div className="wo-final-score">
+          <span className="speed-big-num">{score}</span>
+          <span className="speed-denom">/{sentences.length}</span>
+        </div>
+        <Stars count={score >= 7 ? 5 : score >= 5 ? 4 : score >= 3 ? 3 : score >= 1 ? 2 : 1} />
+        <button className="primary" onClick={() => { setRound(r => r + 1); setIdx(0); setScore(0); setDone(false); }}>{t.wo_new_round} 🔤</button>
+        <button className="secondary" onClick={onBack}>{t.home}</button>
+      </div>
+    </main>
+  );
+
+  return (
+    <main className="game-page" dir={rtl ? 'rtl' : 'ltr'}>
+      <nav className="game-nav">
+        <button className="game-nav-back" onClick={onBack}>←</button>
+        <span className="game-page-title">🔤 {t.wo_title}</span>
+        <span className="match-score-badge">{idx + 1}/{sentences.length}</span>
+      </nav>
+      <div className="wo-wrap">
+        <div className="wo-meaning-card">
+          <div className="wo-meaning-label">{t.wo_hint}</div>
+          <div className="wo-meaning-text">{meaning}</div>
+        </div>
+        <div className={`wo-answer-zone${feedback === 'ok' ? ' wo-zone-ok' : feedback === 'err' ? ' wo-zone-err' : answer.length > 0 ? ' wo-zone-active' : ''}`}>
+          {answer.length === 0
+            ? <span className="wo-zone-placeholder">…</span>
+            : answer.map(tile => (
+                <button key={tile.id} className="wo-tile wo-tile-placed" onClick={() => tapAnswer(tile)}>{tile.w}</button>
+              ))}
+        </div>
+        {feedback && (
+          <div className={`wo-feedback ${feedback}`}>
+            {feedback === 'ok' ? t.wo_correct : t.wo_wrong}
+          </div>
+        )}
+        <div className="wo-pool">
+          {tiles.map(tile => (
+            <button key={tile.id} className="wo-tile" onClick={() => tapTile(tile)}>{tile.w}</button>
+          ))}
+        </div>
+        <div className="wo-actions">
+          {!feedback ? (
+            <>
+              <button className="wo-undo-btn" onClick={undo} disabled={answer.length === 0}>↩ {t.wo_undo}</button>
+              <button className="primary wo-check-btn" disabled={answer.length !== sentence.words.length} onClick={check}>{t.wo_check}</button>
+            </>
+          ) : (
+            <button className="primary wo-next-btn" onClick={next}>{t.wo_next} →</button>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
+
 /* ─────────────── HOME PAGE ─────────────── */
 function HomePage({ lang, setLang, onJoin, onGame }) {
   const t = copy[lang];
@@ -703,6 +847,12 @@ function HomePage({ lang, setLang, onJoin, onGame }) {
             title={t.speed_title}
             desc={t.speed_desc}
             onClick={() => onGame('speed')}
+          />
+          <GameCard
+            emoji="🔤"
+            title={t.wo_title}
+            desc={t.wo_desc}
+            onClick={() => onGame('wordorder')}
           />
         </div>
       </section>
@@ -1063,6 +1213,7 @@ function App() {
   if (stage === 'match')     return <MatchGame      key={gameKey} lang={lang} onBack={() => setStage('home')} onReplay={() => replay('match')} />;
   if (stage === 'flashcard') return <FlashCards     key={gameKey} lang={lang} onBack={() => setStage('home')} onReplay={() => replay('flashcard')} />;
   if (stage === 'speed')     return <SpeedChallenge key={gameKey} lang={lang} onBack={() => setStage('home')} onReplay={() => replay('speed')} />;
+  if (stage === 'wordorder') return <WordOrder      key={gameKey} lang={lang} onBack={() => setStage('home')} />;
 
   return (
     <HomePage
