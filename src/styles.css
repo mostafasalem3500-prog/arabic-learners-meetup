@@ -663,6 +663,16 @@ th { color: var(--muted); font-size: 13px; text-transform: uppercase; }
 
 .flash-emoji-big { font-size: 56px; line-height: 1; margin-bottom: 12px; }
 
+.flash-category {
+  font: 600 11px 'DM Sans'; text-transform: uppercase; letter-spacing: .12em;
+  background: rgba(255,255,255,.25); color: #fff;
+  padding: 3px 12px; border-radius: 99px; margin-bottom: 10px;
+}
+
+.round-badge {
+  font: 500 13px 'DM Sans'; opacity: .65; margin-inline-start: 6px;
+}
+
 .flash-arabic {
   font: 900 48px 'Noto Kufi Arabic'; color: #fff; line-height: 1.1;
   text-align: center;

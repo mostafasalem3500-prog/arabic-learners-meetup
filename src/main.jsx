@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Globe, CalendarBlank, MapPin, User, ArrowRight, GridFour, BookOpen,
@@ -22,6 +22,19 @@ function getMeaning(item, lang) {
   return lang === 'ar' ? item.clues.en : (item.clues[lang] || item.clues.en);
 }
 
+function makeSpeedQuestion(item, lang, pool) {
+  const sameType = pool.filter(x => x.type === item.type && x.id !== item.id);
+  const distractors = shuffle(sameType).slice(0, 2).map(x => x.answer);
+  const correct = item.answer;
+  const options = shuffle([correct, ...distractors]);
+  const clue = lang === 'ar' ? item.clues.en : (item.clues[lang] || item.clues.en);
+  const numPool = item.type === 'number' ? pool.filter(x => x.type === 'number') : null;
+  const word = item.type === 'number'
+    ? String(numPool.findIndex(x => x.id === item.id) + 1)
+    : clue;
+  return { id: item.id, type: item.type, emoji: item.emoji, word, options, correct };
+}
+
 /* ─────────────── TRANSLATIONS ─────────────── */
 const copy = {
   en: {
@@ -42,6 +55,8 @@ const copy = {
     flash_tap:'Tap to flip', flash_got:'Got it!', flash_done:'All done! 🌟',
     speed_title:'Speed Quiz', speed_desc:'30 seconds — how many can you get right?',
     speed_go:'Start!', speed_done:"Time's up!", speed_correct:'Correct',
+    cat_word:'Word', cat_phrase:'Phrase', cat_number:'Number',
+    match_new_round:'New Round', match_round:'Round',
   },
   tr: {
     welcome:'Hoş geldiniz!', intro:'Burada olmanıza sevindik. Haydi birlikte Arapça öğrenelim.',
@@ -61,6 +76,8 @@ const copy = {
     flash_tap:'Çevirmek için dokun', flash_got:'Anladım!', flash_done:'Hepsi tamam! 🌟',
     speed_title:'Hız Testi', speed_desc:'30 saniye — kaç tane yapabilirsin?',
     speed_go:'Başla!', speed_done:'Süre doldu!', speed_correct:'Doğru',
+    cat_word:'Kelime', cat_phrase:'İfade', cat_number:'Sayı',
+    match_new_round:'Yeni Tur', match_round:'Tur',
   },
   uz: {
     welcome:"Xush kelibsiz!", intro:"Sizni koʻrganimizdan xursandmiz. Keling, arab tilini birgalikda oʻrganamiz.",
@@ -80,6 +97,8 @@ const copy = {
     flash_tap:"Ag'darish uchun bosing", flash_got:"O'rgandim!", flash_done:"Hammasi tugadi! 🌟",
     speed_title:"Tezlik testi", speed_desc:"30 soniya — nechta to'g'ri javob bera olasiz?",
     speed_go:"Boshlash!", speed_done:"Vaqt tugadi!", speed_correct:"To'g'ri",
+    cat_word:"So'z", cat_phrase:"Ibora", cat_number:"Raqam",
+    match_new_round:"Yangi tur", match_round:"Tur",
   },
   ar: {
     welcome:'مرحبًا!', intro:'سعداء بحضورك. لنتعلم العربية معًا، كلمةً ومحادثةً في كل مرة.',
@@ -99,6 +118,8 @@ const copy = {
     flash_tap:'اضغط للقلب', flash_got:'حفظت!', flash_done:'أنهيت الكل! 🌟',
     speed_title:'تحدي السرعة', speed_desc:'30 ثانية — كم سؤالاً تستطيع الإجابة؟',
     speed_go:'ابدأ!', speed_done:'انتهى الوقت!', speed_correct:'صحيح',
+    cat_word:'مفردة', cat_phrase:'عبارة', cat_number:'رقم',
+    match_new_round:'جولة جديدة', match_round:'الجولة',
   },
 };
 
@@ -269,16 +290,25 @@ function GameCard({ emoji, title, desc, onClick }) {
 }
 
 /* ─────────────── MATCH GAME ─────────────── */
-function MatchGame({ lang, onBack }) {
+function MatchGame({ lang, onBack, onReplay }) {
   const t   = copy[lang];
   const rtl = isRtl(lang);
 
-  const [gameItems] = useState(() => shuffle([...questionBank]).slice(0, 6));
-  const [rightOrder] = useState(() => shuffle([0,1,2,3,4,5]));
+  const [round, setRound] = useState(1);
+
+  const wordPool = useMemo(() => questionBank.filter(x => x.type === 'word'), []);
+  const gameItems = useMemo(() => shuffle([...wordPool]).slice(0, 6), [round]);
+  const rightOrder = useMemo(() => shuffle([0,1,2,3,4,5]), [round]);
+
   const [leftSel,  setLeftSel]  = useState(null);
   const [rightSel, setRightSel] = useState(null);
   const [matched,  setMatched]  = useState(new Set());
   const [wrongPair,setWrongPair]= useState(null);
+
+  useEffect(() => {
+    setLeftSel(null); setRightSel(null);
+    setMatched(new Set()); setWrongPair(null);
+  }, [round]);
 
   function checkMatch(leftIdx, rightPos) {
     if (rightOrder[rightPos] === leftIdx) {
@@ -312,7 +342,7 @@ function MatchGame({ lang, onBack }) {
         <button onClick={onBack}>
           {rtl ? <ArrowRight size={18}/> : <ArrowLeft size={18}/>} {t.home}
         </button>
-        <span className="game-page-title">🎯 {t.match_title}</span>
+        <span className="game-page-title">🎯 {t.match_title} <small className="round-badge">{t.match_round} {round}</small></span>
         <span className="match-score-badge">{matched.size}/6</span>
       </nav>
 
@@ -323,7 +353,7 @@ function MatchGame({ lang, onBack }) {
           <h2>{t.match_win}</h2>
           <Stars count={5} />
           <div style={{ display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:280, margin:'24px auto 0' }}>
-            <button className="primary" onClick={() => window.location.reload()}>{t.again}</button>
+            <button className="primary" onClick={() => setRound(r => r + 1)}>{t.match_new_round} 🎯</button>
             <button className="secondary" onClick={onBack}>{t.home}</button>
           </div>
         </div>
@@ -364,17 +394,24 @@ function MatchGame({ lang, onBack }) {
 }
 
 /* ─────────────── FLASH CARDS ─────────────── */
-function FlashCards({ lang, onBack }) {
+function FlashCards({ lang, onBack, onReplay }) {
   const t   = copy[lang];
   const rtl = isRtl(lang);
 
-  const [cards] = useState(() => shuffle([...questionBank]).slice(0, 20));
+  const [round,   setRound]   = useState(1);
+  const cards = useMemo(() => shuffle([...questionBank]).slice(0, 15), [round]);
   const [idx,     setIdx]     = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [learned, setLearned] = useState(new Set());
   const [done,    setDone]    = useState(false);
 
+  useEffect(() => {
+    setIdx(0); setFlipped(false); setLearned(new Set()); setDone(false);
+  }, [round]);
+
   const card = cards[idx];
+
+  const catLabel = { word: t.cat_word, phrase: t.cat_phrase, number: t.cat_number };
 
   function flip() { setFlipped(f => !f); }
 
@@ -408,7 +445,7 @@ function FlashCards({ lang, onBack }) {
         <h2>{t.flash_done}</h2>
         <Stars count={5} />
         <div style={{ display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:280, margin:'24px auto 0' }}>
-          <button className="primary" onClick={() => window.location.reload()}>{t.again}</button>
+          <button className="primary" onClick={() => setRound(r => r + 1)}>{t.match_new_round} 🃏</button>
           <button className="secondary" onClick={onBack}>{t.home}</button>
         </div>
       </div>
@@ -427,11 +464,13 @@ function FlashCards({ lang, onBack }) {
         <div className="flash-card-outer" onClick={flip} role="button" aria-label={t.flash_tap}>
           <div className={`flash-card${flipped ? ' flipped' : ''}`}>
             <div className="flash-front">
+              <div className="flash-category">{catLabel[card.type] || card.type}</div>
               <div className="flash-emoji-big">{card.emoji}</div>
               <div className="flash-arabic">{card.answer}</div>
               <div className="flash-tap-hint">{t.flash_tap} ↻</div>
             </div>
             <div className="flash-back">
+              <div className="flash-category" style={{ background:'rgba(255,255,255,.2)' }}>{catLabel[card.type] || card.type}</div>
               <div className="flash-emoji-big">{card.emoji}</div>
               <div className="flash-meaning">{getMeaning(card, lang)}</div>
               <div className="flash-arabic-small">{card.answer}</div>
@@ -462,17 +501,14 @@ function FlashCards({ lang, onBack }) {
 }
 
 /* ─────────────── SPEED CHALLENGE ─────────────── */
-function SpeedChallenge({ lang, onBack }) {
+function SpeedChallenge({ lang, onBack, onReplay }) {
   const t   = copy[lang];
   const rtl = isRtl(lang);
 
-  const [questions] = useState(() =>
-    shuffle([...questionBank]).slice(0, 40).map(item => {
-      const loc = localizeQuestion(item, lang);
-      const correct = loc.options[0];
-      const opts = shuffle([...loc.options]);
-      return { emoji: loc.emoji, word: loc.word, options: opts, correct };
-    })
+  const pool = useMemo(() => shuffle([...questionBank]).slice(0, 40), []);
+  const questions = useMemo(
+    () => pool.map(item => makeSpeedQuestion(item, lang, questionBank)),
+    [pool, lang]
   );
 
   const [started,  setStarted]  = useState(false);
@@ -524,7 +560,7 @@ function SpeedChallenge({ lang, onBack }) {
         </div>
         <Stars count={stars} />
         <div style={{ display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:280, margin:'20px auto 0' }}>
-          <button className="primary" onClick={() => window.location.reload()}>{t.again}</button>
+          <button className="primary" onClick={onReplay}>{t.again} ⚡</button>
           <button className="secondary" onClick={onBack}>{t.home}</button>
         </div>
       </div>
@@ -579,13 +615,9 @@ function SpeedChallenge({ lang, onBack }) {
           {q.options.map((opt, i) => (
             <button
               key={`${qIdx}-${i}`}
-              className={`speed-option ${feedback && opt === q.correct ? 'ok' : feedback === 'err' && q.options[i] !== q.correct ? 'err-maybe' : ''}`}
+              className={`speed-option${feedback && opt === q.correct ? ' ok' : feedback === 'err' && opt !== q.correct ? ' err-maybe' : ''}`}
               onClick={() => answer(opt)}
               disabled={!!feedback}
-              style={{
-                background: feedback && opt === q.correct ? '#eaf7f0' : '',
-                borderColor: feedback && opt === q.correct ? 'var(--green)' : '',
-              }}
             >
               {opt}
             </button>
@@ -1004,12 +1036,16 @@ function Admin() {
 /* ─────────────── ROOT APP ─────────────── */
 function App() {
   const saved = localStorage.lang;
-  const [lang,   setLang]   = useState(copy[saved] ? saved : 'en');
-  const [name,   setName]   = useState('');
-  const [stage,  setStage]  = useState('home');
-  const [result, setResult] = useState(null);
+  const [lang,    setLang]    = useState(copy[saved] ? saved : 'en');
+  const [name,    setName]    = useState('');
+  const [stage,   setStage]   = useState('home');
+  const [result,  setResult]  = useState(null);
+  const [gameKey, setGameKey] = useState(0);
 
   useEffect(() => { localStorage.lang = lang; }, [lang]);
+
+  function goGame(s) { setGameKey(k => k + 1); setStage(s); }
+  function replay(s) { setGameKey(k => k + 1); setStage(s); }
 
   if (location.pathname === '/admin') return <Admin />;
   if (stage === 'quiz') return (
@@ -1024,16 +1060,16 @@ function App() {
   if (stage === 'result') return (
     <Result lang={lang} result={result} onAgain={() => setStage('home')} />
   );
-  if (stage === 'match')     return <MatchGame      lang={lang} onBack={() => setStage('home')} />;
-  if (stage === 'flashcard') return <FlashCards     lang={lang} onBack={() => setStage('home')} />;
-  if (stage === 'speed')     return <SpeedChallenge lang={lang} onBack={() => setStage('home')} />;
+  if (stage === 'match')     return <MatchGame      key={gameKey} lang={lang} onBack={() => setStage('home')} onReplay={() => replay('match')} />;
+  if (stage === 'flashcard') return <FlashCards     key={gameKey} lang={lang} onBack={() => setStage('home')} onReplay={() => replay('flashcard')} />;
+  if (stage === 'speed')     return <SpeedChallenge key={gameKey} lang={lang} onBack={() => setStage('home')} onReplay={() => replay('speed')} />;
 
   return (
     <HomePage
       lang={lang}
       setLang={l => setLang(l)}
       onJoin={n => { setName(n); setStage('quiz'); }}
-      onGame={s => setStage(s)}
+      onGame={s => goGame(s)}
     />
   );
 }
